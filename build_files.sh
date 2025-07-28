@@ -11,14 +11,14 @@ else
 fi
 
 echo "Building Project Packages........"
-python3.9 -m pip install --upgrade pip
-pip3.9 install -r requirements.txt
+python3.12 -m pip install --upgrade pip
+pip3.12 install -r requirements.txt
 
 echo "Migrating the Databases........."
 # python3 manage.py makemigrations --noinput
-python3.9 manage.py migrate --noinput
+python3.12 manage.py migrate --noinput
 
 echo "Collect static files"
-python3.9 manage.py collectstatic --noinput
+python3.12 manage.py collectstatic --noinput
 
 echo "--------------END OF BUILD-----------"
