@@ -2,15 +2,23 @@
 
 echo "--------------START BUILD-----------"
 
-echo "Building Project Packages........"
-python3.10 -m pip install --upgrade pip
-python3.10 -m pip install -r requirements.txt
+# Check if pip3 is available
+if command -v pip3 &> /dev/null; then
+    echo "pip3 is installed. Version:"
+    pip3 --version
+else
+    echo "pip3 is not installed"
+fi
 
-echo "Collect static files"
-python3.10 manage.py collectstatic --noinput
+echo "Building Project Packages........"
+python3.12 -m pip install --upgrade pip
+pip3.12 install -r requirements.txt
 
 echo "Migrating the Databases........."
 # python3 manage.py makemigrations --noinput
-python3.10 manage.py migrate --noinput
+python3.12 manage.py migrate --noinput
+
+echo "Collect static files"
+python3.12 manage.py collectstatic --noinput
 
 echo "--------------END OF BUILD-----------"
