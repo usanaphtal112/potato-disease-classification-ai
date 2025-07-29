@@ -11,8 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'potatoes_classifier_project.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "potatoes_classifier_project.settings")
 
 application = get_wsgi_application()
-
-app = application
