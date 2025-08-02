@@ -210,6 +210,7 @@ cloudinary.config(
     api_key=config("CLOUDINARY_API_KEY", default=""),
     api_secret=config("CLOUDINARY_API_SECRET", default=""),
     secure=True,
+    api_proxy = config("HTTPS_PROXY", default=None)
 )
 
 # Cloudinary storage settings
