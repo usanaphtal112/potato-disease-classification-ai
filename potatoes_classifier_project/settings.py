@@ -89,20 +89,31 @@ WSGI_APPLICATION = "potatoes_classifier_project.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": config("DB_NAME"),
+#         "USER": config("DB_USER"),
+#         "PASSWORD": config("DB_PASSWORD"),
+#         "HOST": config("DB_HOST"),
+#         "PORT": config("DB_PORT"),
+#     }
+# }
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.db.backends.mysql",
         "NAME": config("DB_NAME"),
         "USER": config("DB_USER"),
         "PASSWORD": config("DB_PASSWORD"),
         "HOST": config("DB_HOST"),
-        "PORT": config("DB_PORT"),
-        "OPTIONS": {
-            "sslmode": "require",
-        },
+        "PORT": config("DB_PORT", default="3306"),
+        # "OPTIONS": {
+        #     "charset": "utf8mb4",
+        #     "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        # },
     }
 }
-
 
 REST_FRAMEWORK = {
     "DEFAULT_PARSER_CLASSES": [
