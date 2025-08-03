@@ -5,8 +5,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 import os
 import time
+import math
 
 from .models import ImageClassification
 from .serializers import (
@@ -20,6 +23,35 @@ from .utils import (
     run_onnx_inference,
     get_classification_results,
 )
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    """
+    Standard pagination for API results with enhanced metadata
+    """
+
+    page_size = 20
+    page_size_query_param = "limit"
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        # The paginator object holds all the necessary info
+        total_count = self.page.paginator.count
+        limit = self.get_page_size(self.request)
+        total_pages = math.ceil(total_count / limit) if limit else 0
+        current_page = self.page.number
+
+        return Response(
+            {
+                "total_count": total_count,
+                "limit": limit,
+                "total_pages": total_pages,
+                "current_page": current_page,
+                "next": self.get_next_link(),
+                "previous": self.get_previous_link(),
+                "results": data,
+            }
+        )
 
 
 class ClassifyImageView(APIView):
@@ -193,10 +225,12 @@ class ClassificationHistoryView(APIView):
     Retrieve a list of recent image classifications with pagination support.
     """
 
+    pagination_class = StandardResultsSetPagination
+
     @swagger_auto_schema(
         operation_summary="Get Classification History",
         operation_description="""
-        Retrieve the latest 50 image classifications from the database.
+        Retrieve a paginated list of all image classifications from the database.
         
         **Response includes:**
         - Classification ID and timestamp
@@ -205,8 +239,23 @@ class ClassificationHistoryView(APIView):
         - Treatment recommendations
         - Processing metadata
         
-        Results are ordered by creation date (newest first).
+        Results are ordered by creation date (newest first) and include
+        pagination metadata.
         """,
+        manual_parameters=[
+            openapi.Parameter(
+                "page",
+                openapi.IN_QUERY,
+                description="A page number within the paginated result set.",
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "limit",
+                openapi.IN_QUERY,
+                description="Number of results to return per page.",
+                type=openapi.TYPE_INTEGER,
+            ),
+        ],
         responses={
             200: openapi.Response(
                 description="Classification history retrieved successfully",
@@ -216,12 +265,20 @@ class ClassificationHistoryView(APIView):
         tags=["History"],
     )
     def get(self, request):
-        classifications = ImageClassification.objects.all()[:50]  # Latest 50
-        serializer = ImageClassificationSerializer(classifications, many=True)
-        return Response(
-            {"count": len(serializer.data), "results": serializer.data},
-            status=status.HTTP_200_OK,
+        # Get all classification objects, ordered by creation date (newest first)
+        classifications = ImageClassification.objects.all().order_by("-created_at")
+
+        # Instantiate the custom paginator and paginate the queryset
+        paginator = self.pagination_class()
+        paginated_classifications = paginator.paginate_queryset(
+            classifications, request, view=self
         )
+
+        # Serialize the paginated data
+        serializer = ImageClassificationSerializer(paginated_classifications, many=True)
+
+        # Return the paginated response using your custom method
+        return paginator.get_paginated_response(serializer.data)
 
 
 class ClassificationDetailView(APIView):
